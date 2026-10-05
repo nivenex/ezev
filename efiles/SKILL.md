@@ -16,7 +16,8 @@ TripSuite is a back-office system for travel agencies. The MCP server exposes ~6
 | Which tool does X? Args, returns, caveats for every tool | `references/tool-catalog.md` |
 | "Where do I get this UUID?" / which writes need `ifMatch` | `references/id-resolution.md` |
 | Anything involving money: payments, invoices, refunds, commissions, paying entity | `references/money-flows.md` (**read before any money write**) |
-| Step-by-step recipes (create trip, book from supplier doc, cancel, bill, report…) | `references/workflows.md` |
+| Step-by-step **write** recipes (create trip, book from supplier doc, cancel, bill…) | `references/workflows.md` |
+| **Read/analysis** patterns: client 360, revenue/commission/pipeline/supplier reports, ambiguity handling, response formatting, error recovery | `references/workflow-patterns.md` |
 | Building/editing itinerary components (air, hotel, cruise, …) and date/time formats | `references/booking-components.md` |
 | Errors, locked/ARC records, duplicates, "why did this fail" | `references/gotchas-and-errors.md` |
 | Copy-and-adapt request payloads | `assets/examples/*.json` |
@@ -56,14 +57,68 @@ Two facts that trip people up constantly:
 
 1. **Orient first, once.** Call `user_current_view` (access level, `currentUserId`, `currentAdvisor.advisorId`, `organizationId`). Call `organization_view` with that `organizationId` when you need `homeCurrency` / `clientPaymentCurrencies`. `accessLevel: "user"` means writes default to the current advisor; `"organization"` means you must ask who the advisor/assignee is, because TripSuite never picks one.
 2. **Search before you create.** Clients (email is unique per org), trips (overlap/within 30 days of the same client), suppliers (exact `name`), and also search before *retrying* a create that timed out. Visibility is permission-scoped: "no match" can still collide with a record the user can't see (a duplicate-email error is the tell; tell the user to ask an admin).
-3. **Resolve ambiguity with the user, never silently.** More than one plausible client/trip/stage/destination/supplier → show 2–4 candidates (name + distinguishing detail) and ask. Never write against a guessed match.
+3. **IDs first; search only when you must; confirm after searching.** If you already have a UUID (pasted by the user, in an `appUrl`, from an earlier tool result, or already confirmed), use it directly and don't re-search by name. If you only have a name, email, phone, or description, search, then **show the match and get the user's yes before using it**. Zero matches: say so and offer next steps. Several: list 2–4 and ask. One: still confirm. Details: "Resolving records" below.
 4. **Fresh fetch → `ifMatch` → write.** Updates, cancels, deletes, and most financial changes need the `etag` from an exact-id fetch done *just now*. On a version conflict, re-fetch, re-read what changed, reconsider the change, and only then retry. Don't mention etags/`ifMatch` to the user unless asked. (Which tools need it: `references/id-resolution.md`.)
 5. **Know replace vs merge.** Many fields replace the whole list or block: tags, `destinationIds`, invoice `lineItems`/`paymentMethodIds`, booking `splits`/`additionalClientIds`/`udids`, supplier lists, and profile `dates`/`health`/`preferences` blocks (omitted fields inside a provided block are **cleared**). To change one element, read the current value and send the full desired set. Details: `references/gotchas-and-errors.md`.
 6. **Four kinds of money, four tool families.** Client payment (money IN from client), Trip Invoice (a document), payment to supplier (money OUT, lives on the booking), commission (money IN from supplier, read-only). Using the wrong one double-books or mis-bills. Read `references/money-flows.md` before any money write.
 7. **Never compute or invent financial values.** Use the `totalCharged` the API returns, never your own processing-fee math. Omit `exchangeRate` unless the user explicitly gave one (TripSuite applies its canonical daily rate). Never invent confirmation numbers, PNRs, placeholder components, due dates, or payment methods. Ask.
 8. **Ask for what the system requires and the user didn't say.** Common ones: `payingEntity` (CLIENT/AGENCY) and `isCommissionable` on bookings (never infer commissionability from a supplier default), `travelType` (leisure/corporate) on trips, payment method + due date + already-paid? on supplier payments, fee type on fees.
 9. **Confirm before destructive or irreversible actions** (matrix below). State what will happen and what cascades, then wait for an explicit yes.
-10. **Be sparing with sensitive data.** `client_profile_view` returns health, passport, and contact data. Request only the sections you need, don't paste them back unless asked, and never put them in client-facing fields (invoice `memo`/`terms`) or in `feedback_submit`.
+10. **Names in, names out; and be sparing with sensitive data.** Show names, never raw IDs, in every reply (see "Showing records to the user"). `client_profile_view` also returns health, passport, and contact data. `client_profile_view` returns health, passport, and contact data. Request only the sections you need, don't paste them back unless asked, and never put them in client-facing fields (invoice `memo`/`terms`) or in `feedback_submit`.
+
+## Resolving records: UUID first, search second, confirm after searching
+
+| What you have | Do this |
+|---|---|
+| A **UUID** (user pasted it, it's in an `appUrl`, came from an earlier result, or was already confirmed this conversation) | Use it directly. Exact-id fetch (`id=`) to read, or to get the `etag` before a write. **No name search, no re-confirmation.** |
+| A **public ID** (e.g. `J37CFX8HJ`) | Exact-id fetch with `id=<publicId>`; use the returned `data.id` UUID for writes. It's unambiguous, so just state who/what it resolved to. |
+| Only a **name, email, phone, confirmation #, or description** | Search with the narrowest filter (exact `email` → name → looser), then **confirm with the user before using the result** (below). |
+
+**How to confirm.** Present the matched record(s) with enough to recognize them: name, email/phone, advisor, and one distinguishing detail (trip count, dates, destination, supplier). Ask plainly: "I found **Jane Doe** (jane.doe@example.com, advisor: you, 3 trips). Is that the right client?"
+- **One match:** still confirm; the user's name or email may not mean this record.
+- **Several:** list 2–4 and ask which. Never pick.
+- **None:** say what you searched, then offer: looser spelling, include inactive, or create new.
+- **Mismatch:** if the record conflicts with what the user said (different email, dates, destination), flag it instead of proceeding.
+
+**Efficiency rules.**
+- Resolve **all** the entities a task needs first (client, trip, supplier, destination, advisor, stage, fee type…), then confirm them **in one message together with the plan**, e.g. "Create trip *Lisbon – Doe* for Jane Doe (jane.doe@example.com) to Lisbon, Portugal, May 3–10 2027, owned by you. OK?" One yes covers both the records and the action.
+- Once confirmed, **remember the UUID** for the rest of the conversation and refer to the record by name. Don't re-search or re-ask.
+- Searching to *find candidates* never needs permission; the confirmation is about *using* what you found.
+- If a UUID the user gave **fails to resolve** (not found, not visible), say so. Don't silently fall back to a name search. Ask for a corrected ID or a name to search.
+- If a UUID and a name disagree, trust the UUID and point out the mismatch.
+
+## Showing records to the user: names, never raw IDs
+
+Every response, summary, table, confirmation prompt, and error explanation must show **human-readable names**, not UUIDs or other internal ID fields. Convert back before you reply.
+
+| ID field you hold | Show instead | Get the name via |
+|---|---|---|
+| `clientId`, `primaryClientId`, `additionalClientIds` | Client name (+ email if disambiguating) | `expand=primaryClient` / `additionalClients` (trips), `expand=primaryClient` (bookings), `expand=client` (client payments); else `client_search id=` |
+| `advisorId`, `assignedAdvisorId(s)`, split `advisorId` | Advisor name | `expand=advisor` / `assignedAdvisors`; else `user_search advisorId=` (`includeInactive=true` for former advisors) |
+| `userId` | Person's name | `user_search` / statement results |
+| `tripId` | Trip name (+ dates) | `expand=trip` on bookings/payments/tasks; else `trip_search id=` |
+| `bookingId` | Supplier + confirmation # + dates ("Four Seasons Lisbon, conf. ABC123, May 3–10") | `booking_search id= expand=supplier` |
+| `supplierId`, `serviceProviderSupplierId`, `parentId` | Supplier name | `expand=supplier`; else `supplier_search id=` |
+| `stageId` / `configuredStage` | Stage label ("Booked") | `expand=configuredStage` or `trip_stage_list` |
+| `destinationIds` | Place names ("Lisbon, Portugal") | trip `destinations[].name` or `destination_search` result |
+| `corporateClientId`, `corporateGroupId`, `groupId` | Company / group name | `corporate_client_search id=` / `group_search id=` |
+| `feeTypeId` | Fee category name | `feeTypeName` field (client payments) or `fee_types` list |
+| `clientPaymentMethodId`, invoice `paymentMethodIds` | Method name ("Check", "Wire", …) | the corresponding list tool |
+| `clientPaymentId`, `paymentToSupplierId`/expense id, invoice line item ids | Descriptive label: subject, amount, due date ("Hotel deposit – USD 1,000 due Oct 9") | `subject`/`total` fields; `booking_search expand=expenses` |
+| Component ids | Component title and type ("Hotel Example Lisboa, hotel") | `expand=components` |
+| `taskId` | Task title | `task_search id=` |
+| `agencyId` | Agency name if returned; otherwise just "their agency" | `user_search` |
+| Attachment / invoice ids | File name / invoice number or subject | creation result / `trip_invoice_search` |
+
+How to do it well:
+- **Ask for the names up front.** Add the right `expand=` (and `fields=`) to the first call so names arrive with the data, rather than making a follow-up call per row. Resolve the *distinct* IDs once and reuse the mapping; don't look up the same ID repeatedly.
+- **Reuse what you already know.** Names from the conversation (including records the user confirmed) are the label; don't re-fetch.
+- **If a name can't be resolved** (not visible, removed, lookup failed), say "an advisor I couldn't look up" or "(unavailable)", **not** the UUID.
+- **Tables and lists:** the primary column is the name/label. Never add an "ID" column unless the user asks for one.
+- **Confirmation prompts and error explanations** follow the same rule: "the Doe Lisbon trip", not `f5aa7ea0-…`. When quoting an error, paraphrase it with names; don't paste UUIDs.
+- **Allowed to show:** `publicId`s (e.g. `J37CFX8HJ`, the short IDs used in the TripSuite app) alongside the name when it helps the user find the record; confirmation numbers/PNRs; and `appUrl` links. These are human-facing.
+- **Exceptions:** show a UUID only if the user explicitly asks for it (e.g. for a support ticket or integration), and then alongside the name. **Never** show `etag`/`ifMatch` values.
+- **Machine payloads** (what you send to tools) still use UUIDs; this rule is about what the *user* reads.
 
 ## Confirmation matrix
 
@@ -126,9 +181,13 @@ If the user asks you to "delete" something that is better modeled as cancel/void
 - **Locked trips** can't be edited, cancelled, reinstated, or deleted (stage changes are the exception). ARC bookings have restrictions on refunds/voids and are handled in the ARC dashboard.
 - **After writing,** re-read or use the returned record to report the outcome (names, dates, totals, `appUrl`). For financial writes report the amounts the system returned, not your own arithmetic.
 
+## Analytics and reporting: what TripSuite does and doesn't give you
+
+TripSuite has **no** revenue-metrics, year-over-year, forecast, lifetime-value, travel-habits, vendor-performance, or commission-summary endpoints. Those answers are assembled from `booking_search`, `client_payment_search`, `commission_search`, `trip_search`, and statements, and you do the aggregation. So: define the metric (booked volume vs commission vs fees vs payouts), state the window, date basis, currency, statuses included, and how many records you actually read (`total_count`), and never present a figure you didn't derive. For a vague read request, state your default (e.g. month-to-date) and offer alternatives. See `references/workflow-patterns.md` for the full patterns and the generic-tool → TripSuite mapping.
+
 ## Working style
 
 - Lead with the result, then the one or two things the user must decide. Offer a recommended default and say what it implies.
-- Use human names and links, not UUIDs. Say "Created trip *Lisbon Spring 2027* (link)" rather than printing IDs.
+- **Always translate IDs into names in everything you say to the user** (see "Showing records to the user" above). Say "Created trip *Lisbon Spring 2027* (link)", never the UUID.
 - When a tool rejects a request, read the error, fix the specific problem, and explain it plainly. Don't loop on retries or "work around" guardrails (e.g. don't flip a booking to client-paid just to dodge an agency-schedule mismatch). See `references/gotchas-and-errors.md`.
 - If a capability isn't exposed (e.g. creating commission records, discovering service-provider IDs, supplier-badge IDs, commission group IDs), say so, and consider `feedback_submit` if it blocked the task.
