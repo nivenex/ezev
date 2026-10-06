@@ -1,0 +1,23 @@
+{
+  "tool": "booking_financial_save",
+  "arguments": {
+    "request": {
+      "operation": "add_payment_to_supplier",
+      "bookingId": "<booking id>",
+      "ifMatch": "<etag from booking_search id=\u2026 expand=expenses>",
+      "payment": {
+        "id": "a161202d-5491-4367-864e-2c1edcb2158d",
+        "amount": {
+          "amount": "1000.00",
+          "currency": "USD"
+        },
+        "dueDate": "2026-10-09",
+        "paymentMethod": "CREDIT_CARD",
+        "subject": "Hotel deposit"
+      }
+    }
+  },
+  "notes": [
+    "Omit paidDate for a pending entry. Add paidDate (and optionally paymentId) to record it as paid."
+  ]
+}

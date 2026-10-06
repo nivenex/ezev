@@ -1,0 +1,17 @@
+{
+  "tool": "trip_save",
+  "arguments": {
+    "request": {
+      "operation": "update_trip",
+      "tripId": "<trip id from trip_search>",
+      "ifMatch": "<top-level etag from trip_search id=\u2026>",
+      "changes": {
+        "endDate": "2027-05-12",
+        "notes": "Extended by two days at client request."
+      }
+    }
+  },
+  "notes": [
+    "Only send changed fields. destinationIds, if present, replaces the whole list."
+  ]
+}

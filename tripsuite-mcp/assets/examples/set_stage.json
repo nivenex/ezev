@@ -1,0 +1,11 @@
+{
+  "tool": "trip_save",
+  "arguments": {
+    "request": {
+      "operation": "set_stage",
+      "tripId": "<trip id>",
+      "ifMatch": "<etag>",
+      "stageId": "<stage id from trip_stage_list>"
+    }
+  }
+}

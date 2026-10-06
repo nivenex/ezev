@@ -1,0 +1,34 @@
+{
+  "tool": "trip_invoice_save",
+  "arguments": {
+    "request": {
+      "operation": "create",
+      "invoice": {
+        "tripId": "<trip id>",
+        "clientId": "<client id>",
+        "currency": "USD",
+        "dueDate": "2026-10-20",
+        "clientPaysProcessingCosts": false,
+        "paymentMethodIds": [],
+        "lineItems": [
+          {
+            "id": "bbe63375-4cea-465d-a025-f9f164cf2008",
+            "order": 0,
+            "bookingId": "<client-paid booking id>",
+            "subItems": [
+              {
+                "id": "8cf54b91-ea37-4dbb-a9b2-12fcb1ae4ef2",
+                "order": 0,
+                "clientAction": "REQUEST_AUTHORIZATION",
+                "bookingExpenseId": "<expenses[].id>"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Authorization-only: paymentMethodIds must be [] and no client payment is created."
+  ]
+}

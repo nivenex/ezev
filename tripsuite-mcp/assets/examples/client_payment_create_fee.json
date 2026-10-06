@@ -1,0 +1,25 @@
+{
+  "tool": "client_payment_save",
+  "arguments": {
+    "request": {
+      "operation": "create",
+      "payment": {
+        "id": "53417194-e0b9-4655-ad78-fe46300e6a7f",
+        "tripId": "<trip id>",
+        "clientId": "<client id>",
+        "subject": "Planning fee",
+        "invoiceFor": "FEES",
+        "feeTypeId": "<id from client_payment_configuration_view fee_types>",
+        "total": {
+          "amount": "250.00",
+          "currency": "CAD"
+        },
+        "dueDate": "2026-10-18"
+      }
+    }
+  },
+  "notes": [
+    "Currency = org home currency unless the user names another in clientPaymentCurrencies.",
+    "Read totalCharged from the response; never compute it."
+  ]
+}

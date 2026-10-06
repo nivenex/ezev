@@ -1,0 +1,17 @@
+{
+  "tool": "client_save",
+  "arguments": {
+    "request": {
+      "operation": "create_client",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane.doe@example.com",
+      "phone": "+1 403 555 0100",
+      "preferredName": "Janie"
+    }
+  },
+  "notes": [
+    "Search by exact email and name first to avoid duplicates.",
+    "Under organization access also set assignedAdvisorId (user_search \u2192 agencies[].advisorId) and matching agencyId."
+  ]
+}

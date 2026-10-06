@@ -1,0 +1,15 @@
+{
+  "tool": "client_tags_set",
+  "arguments": {
+    "id": "<client id>",
+    "body": {
+      "tags": [
+        "VIP",
+        "Honeymoon 2027"
+      ]
+    }
+  },
+  "notes": [
+    "Full replace: read current tags first and include the ones you want to keep."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "tool": "trip_cancel",
+  "arguments": {
+    "request": {
+      "operation": "cancel",
+      "tripId": "<trip id>",
+      "ifMatch": "<etag>",
+      "cancellation": {
+        "tripItemRefunds": [
+          {
+            "type": "BOOKING",
+            "itemId": "<booking id>",
+            "amount": "600.00",
+            "currency": "USD",
+            "refundPaymentMethod": "CREDIT_CARD",
+            "refundReceivedDate": "2026-10-04"
+          },
+          {
+            "type": "CLIENT_INVOICE",
+            "itemId": "<client payment id>",
+            "amount": "500.00",
+            "paymentMethod": "CHECK",
+            "refundedAt": "2026-10-04T00:00:00.000Z"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Cascades to ALL active bookings and active client payments. Confirm first.",
+    "Card refunds on client payments are recorded pending."
+  ]
+}

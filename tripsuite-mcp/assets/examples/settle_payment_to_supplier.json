@@ -1,0 +1,14 @@
+{
+  "tool": "booking_financial_save",
+  "arguments": {
+    "request": {
+      "operation": "update_payment_to_supplier",
+      "bookingId": "<booking id>",
+      "ifMatch": "<etag>",
+      "paymentToSupplierId": "<expenses[].id from booking_search>",
+      "changes": {
+        "paidDate": "2026-10-04"
+      }
+    }
+  }
+}

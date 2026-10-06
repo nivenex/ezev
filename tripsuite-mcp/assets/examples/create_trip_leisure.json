@@ -1,0 +1,22 @@
+{
+  "tool": "trip_save",
+  "arguments": {
+    "request": {
+      "operation": "create_trip",
+      "trip": {
+        "name": "Lisbon \u2013 Doe (May 2027)",
+        "travelType": "leisure",
+        "destinationIds": [
+          2267057
+        ],
+        "primaryClientId": "<client id from client_search>",
+        "startDate": "2027-05-03",
+        "endDate": "2027-05-10"
+      }
+    }
+  },
+  "notes": [
+    "destinationIds come from destination_search (numbers); 2267057 is illustrative.",
+    "Run trip_search for the client first; ask about overlapping trips (\u00b130 days)."
+  ]
+}

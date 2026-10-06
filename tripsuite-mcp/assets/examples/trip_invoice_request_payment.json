@@ -1,0 +1,37 @@
+{
+  "tool": "trip_invoice_save",
+  "arguments": {
+    "request": {
+      "operation": "create",
+      "invoice": {
+        "tripId": "<trip id>",
+        "clientId": "<client id>",
+        "currency": "CAD",
+        "dueDate": "2026-10-18",
+        "clientPaysProcessingCosts": false,
+        "paymentMethodIds": [
+          "<every id returned by trip_invoice_payment_method_list>"
+        ],
+        "lineItems": [
+          {
+            "id": "0f55f200-9fa7-4f1b-b604-e33cd5ab54c9",
+            "order": 0,
+            "clientPaymentId": "<client payment id>",
+            "subItems": [
+              {
+                "id": "53c21736-04dd-4cda-8d0a-c5cdf97aab79",
+                "order": 0,
+                "clientAction": "REQUEST_PAYMENT"
+              }
+            ]
+          }
+        ],
+        "memo": "Thank you for choosing us. Your planning fee is due by the date shown."
+      }
+    }
+  },
+  "notes": [
+    "Tell the advisor which payment methods were enabled.",
+    "memo is client-facing."
+  ]
+}

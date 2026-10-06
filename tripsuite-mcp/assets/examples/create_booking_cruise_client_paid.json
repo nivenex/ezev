@@ -1,0 +1,41 @@
+{
+  "tool": "booking_save",
+  "arguments": {
+    "request": {
+      "operation": "create_booking",
+      "booking": {
+        "id": "0f735e12-ba49-4d6f-aee1-a478512c3afb",
+        "tripId": "<trip id>",
+        "supplierId": "<supplier id>",
+        "startDate": "2027-11-07",
+        "endDate": "2027-11-21",
+        "confirmationNumber": "CR778899",
+        "totalAmount": {
+          "amount": "9800.00",
+          "currency": "USD"
+        },
+        "payingEntity": "CLIENT",
+        "isCommissionable": false,
+        "components": [
+          {
+            "type": "cruise",
+            "title": "Tahiti & Society Islands",
+            "startDate": "2027-11-07",
+            "endDate": "2027-11-21",
+            "sortOrder": 0,
+            "cruise": {
+              "shipName": "Example Voyager",
+              "cabinNumber": "7042",
+              "cabinCategory": "Veranda Suite",
+              "embarkationPort": "Papeete",
+              "disembarkationPort": "Papeete"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Only set isCommissionable:false when the source or user explicitly says non-commissionable."
+  ]
+}

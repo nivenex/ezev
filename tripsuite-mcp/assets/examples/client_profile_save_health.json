@@ -1,0 +1,20 @@
+{
+  "tool": "client_profile_save",
+  "arguments": {
+    "clientId": "<client id>",
+    "health": {
+      "allergies": [
+        "Penicillin",
+        "Shellfish"
+      ],
+      "dietaryRestrictions": [
+        "Vegetarian"
+      ],
+      "mobilityRestrictions": [],
+      "notes": "Carries an EpiPen."
+    }
+  },
+  "notes": [
+    "health is a COMPLETE block: omitted fields are cleared. View the existing health section first and resend everything you want to keep."
+  ]
+}

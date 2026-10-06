@@ -1,0 +1,73 @@
+{
+  "tool": "booking_save",
+  "arguments": {
+    "request": {
+      "operation": "create_booking",
+      "booking": {
+        "id": "ad4891a3-dbcb-4308-928f-ba9cedcdf84d",
+        "tripId": "<trip id>",
+        "supplierId": "<supplier id from supplier_search>",
+        "startDate": "2027-05-03",
+        "endDate": "2027-05-10",
+        "bookedDate": "2026-10-04",
+        "confirmationNumber": "ABC123456",
+        "isConfirmed": true,
+        "totalAmount": {
+          "amount": "2400.00",
+          "currency": "EUR"
+        },
+        "baseFare": "2100.00",
+        "taxesAndFees": "300.00",
+        "payingEntity": "AGENCY",
+        "isCommissionable": true,
+        "commissionPercent": 10,
+        "commissionDueDate": "2027-06-09",
+        "components": [
+          {
+            "type": "hotel",
+            "title": "Hotel Example Lisboa",
+            "startDate": "2027-05-03",
+            "endDate": "2027-05-10",
+            "startTime": "15:00",
+            "endTime": "11:00",
+            "sortOrder": 0,
+            "serviceProviderSupplierId": "<supplier id>",
+            "hotel": {
+              "confirmationNumber": "ABC123456",
+              "roomCategory": "Deluxe King",
+              "address": "Rua Exemplo 1, Lisbon, Portugal",
+              "amenities": "Daily breakfast for two; $100 property credit; early check-in when available"
+            }
+          }
+        ],
+        "expenses": [
+          {
+            "amount": {
+              "amount": "720.00",
+              "currency": "EUR"
+            },
+            "dueDate": "2026-11-01T00:00:00.000Z",
+            "paymentMethod": "CREDIT_CARD",
+            "subject": "Hotel deposit"
+          },
+          {
+            "amount": {
+              "amount": "1680.00",
+              "currency": "EUR"
+            },
+            "dueDate": "2027-04-03T00:00:00.000Z",
+            "paymentMethod": "CREDIT_CARD",
+            "subject": "Hotel final payment"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Run booking_source_extract first when working from a supplier document.",
+    "payingEntity and isCommissionable come from the source or the user; never assume.",
+    "Methods must come from booking_payment_to_supplier_method_list.",
+    "Expenses sum equals totalAmount (AGENCY-paid requirement).",
+    "Omit exchangeRate."
+  ]
+}

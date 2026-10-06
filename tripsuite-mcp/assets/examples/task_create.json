@@ -1,0 +1,18 @@
+{
+  "tool": "task_save",
+  "arguments": {
+    "request": {
+      "operation": "create",
+      "task": {
+        "title": "Confirm final payment with hotel",
+        "description": "Deposit paid; final due 2027-04-03.",
+        "tripId": "<trip id>",
+        "dueAt": "2027-03-27T09:00:00-06:00",
+        "remindAt": "2027-03-25T09:00:00-06:00"
+      }
+    }
+  },
+  "notes": [
+    "No ifMatch on task_save. Must link a trip or client."
+  ]
+}
